@@ -20,6 +20,21 @@ function analyticsaudit() {
 		refresh_selection();
 	});
 
+	jQuery( '.fetch-button button' ).on( 'click', function () {
+		var account = jQuery( '#analyticsaudit_account' ).val();
+		var property = jQuery( '[data-account=' + account + '] select' ).val();
+		var profile = jQuery( '[data-property=' + account + '-' + property + '] select' ).val();
+
+		var data = {
+				'action':'analyticsaudit_phase1',
+				'profile' : profile,
+		};
+
+		jQuery.post(analyticsaudit_vars.ajax_url, data, function(response) {
+			alert('Got this from the server: ' + response);
+		});
+	});
+
 }
 
 analyticsaudit();

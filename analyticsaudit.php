@@ -40,6 +40,9 @@ function enqueue_resources() {
 	// JS controlling the "form".
 	wp_register_script( 'analyticsaudit-js', plugin_dir_url( __FILE__ ) . 'js/analyticsaudit.js', array('jquery'), '1.0' );
 	wp_enqueue_script( 'analyticsaudit-js' );
+	wp_localize_script( 'analyticsaudit-js', 'analyticsaudit_vars', array(
+		'ajax_url' => admin_url( 'admin-ajax.php' ),
+	) );
 }
 
 /**
@@ -54,6 +57,7 @@ function enqueue_resources() {
  */
 function shortcode( $attr, $content ) {
 	$start_text      = esc_html__( 'Start', 'analyticsaudit' );
+	$fetch_text      = esc_html__( 'Fetch', 'analyticsaudit' );
 	$action_url      = esc_url( site_url() );
 	$return_to       = esc_url( get_permalink() );
 	$return_to_field = RETURN_TO_FIELD;
@@ -126,6 +130,7 @@ function shortcode( $attr, $content ) {
 					}
 
 					$ret  = '<div class="analytucsaudit_profile">' . $ret . '</div>';
+					$ret  .= '<div class="fetch-button"><button type="button">' . $fetch_text . '</button></div>';
 					$ret .= '<div class="analytucsaudit_results"></div>';
 				}
 			}
@@ -211,3 +216,11 @@ add_action( 'init', __NAMESPACE__ . '\init' );
 /*
  * Ajax handlers.
  */
+
+function phase1() {
+	echo 'profile is ' . $_POST['profile'];
+	die();
+}
+
+add_action( 'wp_ajax_analyticsaudit_phase1', __NAMESPACE__ . '\phase1' );
+add_action( 'wp_ajax_nopriv_analyticsaudit_phase1', __NAMESPACE__ . '\phase1' );
