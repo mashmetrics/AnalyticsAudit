@@ -26,7 +26,7 @@ function analyticsaudit() {
 		var profile = jQuery( '[data-property=' + account + '-' + property + '] select' ).val();
 
 		var data = {
-				'action':'analyticsaudit_phase1',
+				'action':'analyticsaudit_actionable',
 				'profile' : profile,
 		};
 

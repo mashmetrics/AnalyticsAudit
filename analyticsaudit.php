@@ -29,6 +29,7 @@ const RETURN_TO_FIELD  = 'analyticsudit_return_to';
 const ERROR_COOKIE     = 'analyticsudit_error';
 const TOKEN_COOKIE     = 'analyticsudit_token';
 const OAUTH2_PARAMETER = 'code';
+const API_URL          = 'https://analytics-audit.herokuapp.com/api/';
 
 /**
  * Enqueue styling and JS resource.
@@ -217,10 +218,11 @@ add_action( 'init', __NAMESPACE__ . '\init' );
  * Ajax handlers.
  */
 
-function phase1() {
-	echo 'profile is ' . $_POST['profile'];
+function actionable() {
+	$res = wp_remote_get( API_URL . 'actionable&view_id=' . rawurlencode( wp_unslash( $_POST['profile'] ) ) . '&token=' . rawurlencode( $_COOKIE['TOKEN_COOKIE'] ) );
+	print_r($res);
 	die();
 }
 
-add_action( 'wp_ajax_analyticsaudit_phase1', __NAMESPACE__ . '\phase1' );
-add_action( 'wp_ajax_nopriv_analyticsaudit_phase1', __NAMESPACE__ . '\phase1' );
+add_action( 'wp_ajax_analyticsaudit_actionable', __NAMESPACE__ . '\actionable' );
+add_action( 'wp_ajax_nopriv_analyticsaudit_actionable', __NAMESPACE__ . '\actionable' );
