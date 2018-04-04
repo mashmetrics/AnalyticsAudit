@@ -1,0 +1,41 @@
+.analytucsaudit_profile select {
+	width:auto;
+}
+
+.analytucsaudit_profile label {
+	text-align:right;
+	width:200px;
+	display:inline-block;
+	margin-right:10px;
+	line-height:50px;
+}
+
+.analytucsaudit-buttons form {display:inline;}
+
+.analytucsaudit-buttons {
+	clear:both;
+	padding-top:10px;
+}
+
+.analytucsaudit_checkboxes div {
+	width:50%;
+	float:left;
+}
+
+.analytucsaudit_checkboxes input {
+	vertical-align:middle;
+}
+
+.analytucsaudit_test {
+	float:left;
+	width:30%;
+	margin-right:5px;
+}
+
+.analytucsaudit_test.failed {
+	background-color:red;
+}
+
+.analytucsaudit_test.passed {
+	background-color:green;
+}
