@@ -174,25 +174,35 @@ EOT;
 
 					$options = get_option( 'analyticsauditsettings' );
 
-					$test = array(
-						'gtm',
-						'setup_correct'              => 'setup_issues',
-						'filltering_spam'            => 'spam',
-						'raw_or_testing_view'        => 'testing_view',
-						'goals_set_up'               => 'goals',
-						'demographic_data'           => 'tracking_demographic',
-						'events'                     => 'tracking_events',
-						'tracking_enhanced_ecomerce' => 'enhanced_ecommerce',
-						'measuring_goal_values'      => 'measuring_goal_values',
-						'linked_search_console'      => 'search_console',
-						'customize_channel_group'    => 'channel_groups',
-						'content_groups'             => 'content_groups',
-						'tools'                      => 'tools',
+					$tests = array(
+						'accurate'   => array(
+							'gtm',
+							'setup_correct'       => 'setup_issues',
+							'filltering_spam'     => 'spam',
+							'raw_or_testing_view' => 'testing_view',
+						),
+						'actionable' => array(
+							'goals_set_up'               => 'goals',
+							'demographic_data'           => 'tracking_demographic',
+							'events'                     => 'tracking_events',
+							'tracking_enhanced_ecomerce' => 'enhanced_ecommerce',
+							'measuring_goal_values'      => 'measuring_goal_values',
+						),
+						'accessible' => array(
+							'linked_search_console'   => 'search_console',
+							'customize_channel_group' => 'channel_groups',
+							'content_groups'          => 'content_groups',
+							'tools'                   => 'tools',
+						),
 					);
-					foreach ( $test as $id => $prefix ) {
-						$ret .= '<div class="analytucsaudit_test" id="analytucsaudit_test_' . esc_attr( $id ) . '">';
-						$ret .= '<h4>' . esc_html( $options[ $prefix . '_title' ] ) . '</h4>';
-						$ret .= '<div>' . wpautop( wptexturize( $options[ $prefix . '_text' ] ) ) . '</div>';
+					foreach ( $tests as $type => $typetests ) {
+						$ret .= '<div class="analytucsaudit_test_type" id="analytucsaudit_test_type-' . esc_attr( $type ) . '">';
+						foreach ( $typetests as $id => $prefix ) {
+							$ret .= '<div class="analytucsaudit_test" id="analytucsaudit_test_' . esc_attr( $id ) . '">';
+							$ret .= '<h4>' . esc_html( $options[ $prefix . '_title' ] ) . '</h4>';
+							$ret .= '<div>' . wpautop( wptexturize( $options[ $prefix . '_text' ] ) ) . '</div>';
+							$ret .= '</div>';
+						}
 						$ret .= '</div>';
 					}
 

@@ -27,6 +27,15 @@
 }
 
 .analytucsaudit_test {
+	padding: 5px 0;
+	margin-top:5px;
+}
+
+.analytucsaudit_test div {
+	padding: 0 5px;
+}
+
+.analytucsaudit_test_type {
 	float:left;
 	width:30%;
 	margin-right:5px;

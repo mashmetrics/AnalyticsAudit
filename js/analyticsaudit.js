@@ -12,6 +12,16 @@ function analyticsaudit() {
 		jQuery( '[data-property=' + account + '-' + property + ']' ). show();
 	}
 
+	function equal_tests_height() {
+		var max = 0;
+		jQuery( '.analytucsaudit_test' ).each( function () {
+			if ( jQuery(this).height() > max ) {
+				max = jQuery(this).height();
+			}
+ 		});
+		jQuery( '.analytucsaudit_test' ).height( max );
+	}
+
 	jQuery(document).ready( function () {
 		refresh_selection();
 	});
@@ -30,6 +40,7 @@ function analyticsaudit() {
 		jQuery( '#analytucsaudit_results').show();
 		jQuery( '#analytucsaudit_message').show();
 		jQuery( '.analytucsaudit_test' ).removeClass( 'passed' ).removeClass( 'failed' );
+		equal_tests_height();
 
 		// Get actinables.
 		var data = {
@@ -83,10 +94,12 @@ function analyticsaudit() {
 				'property' : property,
 				'domain' : domain,
 		};
+
 		var accurates = ['setup_correct', 'filltering_spam', 'raw_or_testing_view'];
 		actinables.forEach( function (item) {
 			jQuery( '#'+ item).hide();
 		});
+
 		jQuery.post(analyticsaudit_vars.ajax_url, data, function(response) {
 			var result = JSON.parse(response.data);
 			jQuery( '#analytucsaudit_message').hide();
