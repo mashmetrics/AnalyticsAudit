@@ -52,6 +52,11 @@ function analyticsaudit() {
 			}
 		}
 
+		function error_handler(response) {
+			jQuery( '#analytucsaudit_message').text('Something went bad :( please rety the whole process');
+		}
+
+		jQuery( '#analytucsaudit_message').text('Running the tests...');
 		jQuery( '#analytucsaudit_message').show();
 		jQuery( '.analytucsaudit_test' ).removeClass( 'passed' ).removeClass( 'failed' );
 
@@ -86,16 +91,19 @@ function analyticsaudit() {
 		});
 
 		jQuery.post(analyticsaudit_vars.ajax_url, data, function(response) {
-			var result = JSON.parse(response.data);
-			jQuery( '#analytucsaudit_message').hide();
-			actinables.forEach( function (item) {
-				if ( result[ item ] ) {
-					jQuery( '#analytucsaudit_test_'+ item).addClass( 'passed' ).show();
-				} else {
-					jQuery( '#analytucsaudit_test_'+ item).addClass( 'failed' ).show();
-				}
-			});
-			reply_processed();
+			if ( response.success ) {
+				var result = JSON.parse(response.data);
+				actinables.forEach( function (item) {
+					if ( result[ item ] ) {
+						jQuery( '#analytucsaudit_test_'+ item).addClass( 'passed' ).show();
+					} else {
+						jQuery( '#analytucsaudit_test_'+ item).addClass( 'failed' ).show();
+					}
+				});
+				reply_processed();
+			} else {
+				error_handler( response );
+			}
 		});
 
 		var data = {
@@ -109,16 +117,19 @@ function analyticsaudit() {
 			jQuery( '#'+ item).hide();
 		});
 		jQuery.post(analyticsaudit_vars.ajax_url, data, function(response) {
-			var result = JSON.parse(response.data);
-			jQuery( '#analytucsaudit_message').hide();
-			accessables.forEach( function (item) {
-				if ( result[ item ] ) {
-					jQuery( '#analytucsaudit_test_'+ item).css('background-color','green').show();
-				} else {
-					jQuery( '#analytucsaudit_test_'+ item).css('background-color','red').show();
-				}
-			});
-			reply_processed();
+			if ( response.success ) {
+				var result = JSON.parse(response.data);
+				accessables.forEach( function (item) {
+					if ( result[ item ] ) {
+						jQuery( '#analytucsaudit_test_'+ item).css('background-color','green').show();
+					} else {
+						jQuery( '#analytucsaudit_test_'+ item).css('background-color','red').show();
+					}
+				});
+				reply_processed();
+			} else {
+				error_handler( response );
+			}
 		});
 
 		var data = {
@@ -134,16 +145,19 @@ function analyticsaudit() {
 		});
 
 		jQuery.post(analyticsaudit_vars.ajax_url, data, function(response) {
-			var result = JSON.parse(response.data);
-			jQuery( '#analytucsaudit_message').hide();
-			accurates.forEach( function (item) {
-				if ( result[ item ] ) {
-					jQuery( '#analytucsaudit_test_'+ item).css('background-color','green').show();
-				} else {
-					jQuery( '#analytucsaudit_test_'+ item).css('background-color','red').show();
-				}
-			});
-			reply_processed();
+			if ( response.success ) {
+				var result = JSON.parse(response.data);
+				accurates.forEach( function (item) {
+					if ( result[ item ] ) {
+						jQuery( '#analytucsaudit_test_'+ item).css('background-color','green').show();
+					} else {
+						jQuery( '#analytucsaudit_test_'+ item).css('background-color','red').show();
+					}
+				});
+				reply_processed();
+			} else {
+				error_handler( response );
+			}
 		});
 	});
 
