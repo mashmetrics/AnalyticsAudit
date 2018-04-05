@@ -41,6 +41,18 @@
 	margin-right:5px;
 }
 
+.analytucsaudit_tests_header {
+	background-color:cyan;
+	padding:10px;
+	border-bottom:3px solid black;
+}
+
+.analytucsaudit_test_description {
+	float:left;
+	width:30%;
+	margin-right:5px;
+}
+
 .analytucsaudit_test.failed {
 	background-color:red;
 }

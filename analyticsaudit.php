@@ -174,9 +174,27 @@ EOT;
 
 					$options = get_option( 'analyticsauditsettings' );
 
+					$header = array(
+						'accurate '   => 'accurate_header',
+						'actionable ' => 'actionable_header',
+						'accessible ' => 'accessiable_header',
+					);
+
+					// header blurb.
+					$ret .= '<div class="analytucsaudit_tests_header">';
+					foreach ( $header as $id => $prefix ) {
+						$ret .= '<div class="analytucsaudit_test_description" id="analytucsaudit_test_description_' . esc_attr( $id ) . '">';
+						$ret .= '<h4>' . esc_html( $options[ $prefix . '_title' ] ) . '</h4>';
+						$ret .= '<div>' . wpautop( wptexturize( $options[ $prefix . '_text' ] ) ) . '</div>';
+						$ret .= '</div>';
+					}
+					$ret .= '<div style="clear:both"></div>';
+					$ret .= '</div>';
+
+					// Tests status.
 					$tests = array(
 						'accurate'   => array(
-							'gtm',
+							'gtm'                 => 'gtm',
 							'setup_correct'       => 'setup_issues',
 							'filltering_spam'     => 'spam',
 							'raw_or_testing_view' => 'testing_view',
@@ -426,6 +444,9 @@ function add_section( $id, $title, $prefix ) {
 function settings_init() {
 	register_setting( 'analyticsauditsettings', 'analyticsauditsettings' );
 
+	add_section( 'analyticsauditsettings_accessiable_header_section', __( 'Accessable Header', 'analyticsaudit' ), 'accessiable_header' );
+	add_section( 'analyticsauditsettings_accurate_header_section', __( 'Accurate Header', 'analyticsaudit' ), 'accurate_header' );
+	add_section( 'analyticsauditsettings_actionable_header_section', __( 'Actionable Header', 'analyticsaudit' ), 'actionable_header' );
 	add_section( 'analyticsauditsettings_gtm_section', __( 'Google Tag Mananger usage', 'analyticsaudit' ), 'gtm' );
 	add_section( 'analyticsauditsettings_setup_issues_section', __( 'Potential Setup Issues', 'analyticsaudit' ), 'setup_issues' );
 	add_section( 'analyticsauditsettings_spam_section', __( 'Spam', 'analyticsaudit' ), 'spam' );
