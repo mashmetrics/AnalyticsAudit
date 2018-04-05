@@ -42,6 +42,24 @@ function analyticsaudit() {
 		jQuery( '.analytucsaudit_test' ).removeClass( 'passed' ).removeClass( 'failed' );
 		equal_tests_height();
 
+		// Mark GTM test as failed if GTM checkbox is not set
+		var gtm = jQuery('#analytucsaudit_gtm').is(":checked");
+		if (gtm) {
+			jQuery( '#analytucsaudit_test_gtm').addClass( 'passed' ).show();
+		} else {
+			jQuery( '#analytucsaudit_test_gtm').addClass( 'failed' ).show();
+		}
+
+		// Mark tools test as failed if non of the tools checkbox is set
+		var tableau = jQuery('#analytucsaudit_tableau').is(":checked");
+		var datastudio = jQuery('#analytucsaudit_datastudio').is(":checked");
+		var bigquery = jQuery('#analytucsaudit_bigquery').is(":checked");
+		if (tableau || datastudio || bigquery) {
+			jQuery( '#analytucsaudit_test_tools').addClass( 'passed' ).show();
+		} else {
+			jQuery( '#analytucsaudit_test_tools').addClass( 'failed' ).show();
+		}
+
 		// Get actinables.
 		var data = {
 				'action':'analyticsaudit_actionable',
