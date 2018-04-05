@@ -223,6 +223,16 @@ EOT;
 						}
 						$ret .= '</div>';
 					}
+					$ret .= '<div style="clear:both"></div>';
+
+					// Data points HTML.
+					$ret .= '<div>Total Sessions:<span id="analytucsaudit_datapoint_total_sessions"></span></div>';
+					$ret .= '<div>Bounce Rate:<span id="analytucsaudit_datapoint_bounce_rate"></span></div>';
+					$ret .= '<div>Top Hostname:<span id="analytucsaudit_datapoint_top_hostname"></span></div>';
+					$ret .= '<div>Traffic Majority:</div>';
+					$ret .= '<div>Channel:<span id="analytucsaudit_datapoint_channel"></span></div>';
+					$ret .= '<div>Sessions:<span id="analytucsaudit_datapoint_sessions"></span></div>';
+					$ret .= '<div>Percentage:<span id="analytucsaudit_datapoint_percentage"></span></div>';
 
 					$ret .= '</div>';
 				}
@@ -380,6 +390,26 @@ function accurate() {
 
 add_action( 'wp_ajax_analyticsaudit_accurate', __NAMESPACE__ . '\accurate' );
 add_action( 'wp_ajax_nopriv_analyticsaudit_accurate', __NAMESPACE__ . '\accurate' );
+
+/**
+ * Handle data pull ajax requests. Send the relevant request to the API
+ * server and output the response as part of the data if the request was successful,
+ * or an error indication.
+ *
+ * @since 1.0
+ */
+function data_pull() {
+	$response = wp_remote_get( API_URL . 'other_data_pulls' . query_vars(), array( 'timeout' => 28 ) );
+	if ( ! is_wp_error( $response ) && 200 === $response['response']['code'] ) {
+		wp_send_json_success( $response['body'] );
+	} else {
+		wp_send_json_error( $response );
+	}
+	die();
+}
+
+add_action( 'wp_ajax_analyticsaudit_data_pull', __NAMESPACE__ . '\data_pull' );
+add_action( 'wp_ajax_nopriv_analyticsaudit_data_pull', __NAMESPACE__ . '\data_pull' );
 
 /*
  * Settings related

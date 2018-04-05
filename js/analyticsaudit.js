@@ -45,7 +45,7 @@ function analyticsaudit() {
 		 */
 		function reply_processed() {
 			replies++;
-			if ( 3 === replies ) {
+			if ( 4 === replies ) {
 				jQuery( '#analytucsaudit_message').hide();
 				jQuery( '#analytucsaudit_results').show();
 				equal_tests_height();
@@ -123,9 +123,9 @@ function analyticsaudit() {
 				var result = JSON.parse(response.data);
 				accessables.forEach( function (item) {
 					if ( result[ item ] ) {
-						jQuery( '#analytucsaudit_test_'+ item).css('background-color','green').show();
+						jQuery( '#analytucsaudit_test_'+ item).addClass('passed').show();
 					} else {
-						jQuery( '#analytucsaudit_test_'+ item).css('background-color','red').show();
+						jQuery( '#analytucsaudit_test_'+ item).addClass('failed').show();
 					}
 				});
 				reply_processed();
@@ -151,9 +151,9 @@ function analyticsaudit() {
 				var result = JSON.parse(response.data);
 				accurates.forEach( function (item) {
 					if ( result[ item ] ) {
-						jQuery( '#analytucsaudit_test_'+ item).css('background-color','green').show();
+						jQuery( '#analytucsaudit_test_'+ item).addClass('passed').show();
 					} else {
-						jQuery( '#analytucsaudit_test_'+ item).css('background-color','red').show();
+						jQuery( '#analytucsaudit_test_'+ item).addClass('failed').show();
 					}
 				});
 				reply_processed();
@@ -161,6 +161,32 @@ function analyticsaudit() {
 				error_handler( response );
 			}
 		});
+
+		// Collect metrics.
+		var data = {
+				'action':'analyticsaudit_data_pull',
+				'profile' : profile,
+				'property' : property,
+				'domain' : domain,
+		};
+
+		jQuery.post(analyticsaudit_vars.ajax_url, data, function(response) {
+			if ( response.success ) {
+				var data_point = ['total_sessions', 'bounce_rate', 'top_hostname'];
+				var traffic_majority = ['channel', 'sessions', 'percentage'];
+				var result = JSON.parse(response.data);
+				data_point.forEach( function (item) {
+					jQuery( '#analytucsaudit_datapoint_'+ item).text( result[ item ] ).show();
+				});
+				traffic_majority.forEach( function (item) {
+					jQuery( '#analytucsaudit_datapoint_'+ item).text( result['traffic_majority'][ item ] ).show();
+				});
+				reply_processed();
+			} else {
+				error_handler( response );
+			}
+		});
+
 	});
 
 }
