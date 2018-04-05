@@ -31,16 +31,29 @@ function analyticsaudit() {
 	});
 
 	jQuery( '.fetch-button' ).on( 'click', function () {
+		jQuery( '#analytucsaudit_results').hide();
 		var account = jQuery( '#analyticsaudit_account' ).val();
 		var property = jQuery( '[data-account=' + account + '] select' ).val();
 		var domain = jQuery( '[data-account=' + account + '] select option:selected' ).text();
 		var profile = jQuery( '[data-property=' + account + '-' + property + '] select' ).val();
 
-		jQuery( '#analytucsaudit_message').text( 'Fetching. actionables..' );
-		jQuery( '#analytucsaudit_results').show();
+		var replies = 0;
+
+		/**
+		 *  Called from th reply handlers to indicate complition of ajax processing
+		 *  once all replies are in expose the test results.
+		 */
+		function reply_processed() {
+			replies++;
+			if ( 3 === replies ) {
+				jQuery( '#analytucsaudit_message').hide();
+				jQuery( '#analytucsaudit_results').show();
+				equal_tests_height();
+			}
+		}
+
 		jQuery( '#analytucsaudit_message').show();
 		jQuery( '.analytucsaudit_test' ).removeClass( 'passed' ).removeClass( 'failed' );
-		equal_tests_height();
 
 		// Mark GTM test as failed if GTM checkbox is not set
 		var gtm = jQuery('#analytucsaudit_gtm').is(":checked");
@@ -82,6 +95,7 @@ function analyticsaudit() {
 					jQuery( '#analytucsaudit_test_'+ item).addClass( 'failed' ).show();
 				}
 			});
+			reply_processed();
 		});
 
 		var data = {
@@ -104,6 +118,7 @@ function analyticsaudit() {
 					jQuery( '#analytucsaudit_test_'+ item).css('background-color','red').show();
 				}
 			});
+			reply_processed();
 		});
 
 		var data = {
@@ -128,6 +143,7 @@ function analyticsaudit() {
 					jQuery( '#analytucsaudit_test_'+ item).css('background-color','red').show();
 				}
 			});
+			reply_processed();
 		});
 	});
 

@@ -169,7 +169,7 @@ EOT;
 					$ret .= '<p>Other Data Tools Used (check all that apply)</p>';
 					$ret .= $checkboxes . '</div>';
 					$ret .= '<div class="analytucsaudit-buttons"><button class="fetch-button" type="button">' . $fetch_text . '</button>' . $retry_form . '</div>';
-					$ret .= '<div id="analytucsaudit_message style="display:none""></div>';
+					$ret .= '<div id="analytucsaudit_message">Running the tests...</div>';
 					$ret .= '<div id="analytucsaudit_results" style="display:none">';
 
 					$options = get_option( 'analyticsauditsettings' );

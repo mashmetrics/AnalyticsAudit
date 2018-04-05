@@ -53,6 +53,13 @@
 	margin-right:5px;
 }
 
+#analytucsaudit_message {
+	display:none;
+	margin:10px;
+	padding:10px;
+	border:1px solid cyan;
+}
+
 .analytucsaudit_test.failed {
 	background-color:red;
 }
