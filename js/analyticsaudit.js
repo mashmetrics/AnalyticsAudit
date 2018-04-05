@@ -53,9 +53,11 @@ function analyticsaudit() {
 		}
 
 		function error_handler(response) {
-			jQuery( '#analytucsaudit_message').text('Something went bad :( please rety the whole process');
+			jQuery( '#analytucsaudit_message').addClass( 'error' );
+			jQuery( '#analytucsaudit_message').html( 'Something went wrong :( please retry the whole process' );
 		}
 
+		jQuery( '#analytucsaudit_message').removeClass( 'error' );
 		jQuery( '#analytucsaudit_message').text('Running the tests...');
 		jQuery( '#analytucsaudit_message').show();
 		jQuery( '.analytucsaudit_test' ).removeClass( 'passed' ).removeClass( 'failed' );

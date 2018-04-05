@@ -53,6 +53,14 @@
 	margin-right:5px;
 }
 
+.analytucsaudit_test.failed {
+	background-color:red;
+}
+
+.analytucsaudit_test.passed {
+	background-color:green;
+}
+
 #analytucsaudit_message {
 	display:none;
 	margin:10px;
@@ -60,10 +68,6 @@
 	border:1px solid cyan;
 }
 
-.analytucsaudit_test.failed {
-	background-color:red;
-}
-
-.analytucsaudit_test.passed {
-	background-color:green;
+#analytucsaudit_message.error {
+	border:1px solid red;
 }
