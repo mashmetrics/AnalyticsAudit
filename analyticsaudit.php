@@ -90,6 +90,13 @@ EOT;
 <div><input type="checkbox" id="analytucsaudit_gtm"><label for="analytucsaudit_gtm">Google Tag Manager</label></div>
 EOT;
 
+	$websitetype_checkboxes = <<<EOT
+<div><input type="checkbox" id="analytucsaudit_ecom"><label for="analytucsaudit_ecom">Buy Something</label></div>
+<div><input type="checkbox" id="analytucsaudit_lead"><label for="analytucsaudit_lead">Fill out a Form</label></div>
+<div><input type="checkbox" id="analytucsaudit_publisher"><label for="analytucsaudit_publisher">Read my Blog</label></div>
+EOT;
+
+
 	if ( isset( $_COOKIE[ TOKEN_COOKIE ] ) ) {
 		// Get GA accounts and views from the user's account.
 		$response = wp_remote_get( 'https://www.googleapis.com/analytics/v3/management/accountSummaries', array(
@@ -165,6 +172,9 @@ EOT;
 					}
 
 					$ret  = '<div class="analytucsaudit_profile">' . $ret . '</div>';
+					$ret .= '<div class="analytucsaudit_sitetype_checkboxes">';
+					$ret .= '<p>What do you want people to do on your website? (Check all that Apply)</p>';
+					$ret .= $websitetype_checkboxes . '<div class="sf"></div></div>';
 					$ret .= '<div class="analytucsaudit_checkboxes">';
 					$ret .= '<p>Other Data Tools Used (check all that apply)</p>';
 					$ret .= $checkboxes . '</div>';

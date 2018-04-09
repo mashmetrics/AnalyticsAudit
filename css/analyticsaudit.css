@@ -17,13 +17,22 @@
 	padding-top:10px;
 }
 
-.analytucsaudit_checkboxes div {
+.analytucsaudit_checkboxes div, .analytucsaudit_sitetype_checkboxes div {
 	width:50%;
 	float:left;
 }
 
-.analytucsaudit_checkboxes input {
+.analytucsaudit_checkboxes input, .analytucsaudit_sitetype_checkboxes input {
 	vertical-align:middle;
+}
+
+.sf {
+	clear:both;
+	float:none !important;
+}
+
+.analytucsaudit_checkboxes {
+	margin-top:20px;
 }
 
 .analytucsaudit_test {

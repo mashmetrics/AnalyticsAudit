@@ -80,26 +80,44 @@ function analyticsaudit() {
 			jQuery( '#analytucsaudit_test_tools').addClass( 'failed' ).show();
 		}
 
-		// Get actinables.
+		// get ecom and events setup to be used when deciding if they need to be displayed.
+		var ecom_on = jQuery('#analytucsaudit_ecom').is(":checked");
+		var event_on = jQuery('#analytucsaudit_lead').is(":checked") || jQuery('#analytucsaudit_publisher').is(":checked");
+
+		// Get actionables.
 		var data = {
 				'action':'analyticsaudit_actionable',
 				'profile' : profile,
 				'property' : property,
 				'domain' : domain,
 		};
-		var actinables = ['goals_set_up', 'demographic_data', 'events', 'tracking_enhanced_ecomerce', 'measuring_goal_values'];
-		actinables.forEach( function (item) {
-			jQuery( '#'+ item).hide();
+		var actionables = ['goals_set_up', 'demographic_data', 'events', 'tracking_enhanced_ecomerce', 'measuring_goal_values'];
+
+		actionables.forEach( function (item) {
+			jQuery( '#analytucsaudit_test_'+ item).hide();
 		});
 
 		jQuery.post(analyticsaudit_vars.ajax_url, data, function(response) {
 			if ( response.success ) {
 				var result = JSON.parse(response.data);
-				actinables.forEach( function (item) {
+				actionables.forEach( function (item) {
 					if ( result[ item ] ) {
-						jQuery( '#analytucsaudit_test_'+ item).addClass( 'passed' ).show();
+						jQuery( '#analytucsaudit_test_'+ item).addClass( 'passed' );
 					} else {
-						jQuery( '#analytucsaudit_test_'+ item).addClass( 'failed' ).show();
+						jQuery( '#analytucsaudit_test_'+ item).addClass( 'failed' );
+					}
+
+					// Make sure we display ecom and event only when user selects it.
+					if  ( 'tracking_enhanced_ecomerce' == item ) {
+						if ( ecom_on ) {
+							jQuery( '#analytucsaudit_test_'+ item).show();
+						}
+					} else if ( 'events' == item ) {
+						if ( event_on ) {
+							jQuery( '#analytucsaudit_test_'+ item).show();
+						}
+					} else {
+						jQuery( '#analytucsaudit_test_'+ item).show();
 					}
 				});
 				reply_processed();
@@ -115,8 +133,8 @@ function analyticsaudit() {
 				'domain' : domain,
 		};
 		var accessables = ['linked_search_console', 'customize_channel_group', 'content_groups'];
-		actinables.forEach( function (item) {
-			jQuery( '#'+ item).hide();
+		accessables.forEach( function (item) {
+			jQuery( '#analytucsaudit_test_'+ item).hide();
 		});
 		jQuery.post(analyticsaudit_vars.ajax_url, data, function(response) {
 			if ( response.success ) {
@@ -142,8 +160,8 @@ function analyticsaudit() {
 		};
 
 		var accurates = ['setup_correct', 'filltering_spam', 'raw_or_testing_view'];
-		actinables.forEach( function (item) {
-			jQuery( '#'+ item).hide();
+		accurates.forEach( function (item) {
+			jQuery( '#analytucsaudit_test_'+ item).hide();
 		});
 
 		jQuery.post(analyticsaudit_vars.ajax_url, data, function(response) {
