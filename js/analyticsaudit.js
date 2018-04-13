@@ -38,17 +38,69 @@ function analyticsaudit() {
 		var profile = jQuery( '[data-property=' + account + '-' + property + '] select' ).val();
 
 		var replies = 0;
+		var results = {};  // hold all the results of the tests
+
 
 		/**
 		 *  Called from th reply handlers to indicate complition of ajax processing
-		 *  once all replies are in expose the test results.
+		 *  once all replies are in expose the test results, and the results are sent to the server
+		 *  for storage.
 		 */
-		function reply_processed() {
+		function reply_processed( result ) {
+
+			var storename;
+			var name_map = {
+				'goals_set_up' : 'test_goals',
+				'goal_value' : 'test_goal_value',
+				'demographic_data' : 'test_demographic',
+				'events' : 'test_events',
+				'enhanced_ecommerce' : 'test_ecom',
+				'adwords_linked' : 'test_adwords',
+				'channel_groups' : 'test_channelgroups',
+				'content_groups' : 'test_contentgroups',
+				'setup_correct' : 'test_setup',
+				'filltering_spam' : 'test_spam',
+				'raw_or_testing_view' : 'test_raw',
+				'total_sessions' : 'test_sessions',
+				'bounce_rate' : 'test_bouncerate',
+				'top_hostname' : 'test_tophost',
+				'channel' : 'test_majority_channel',
+				'sessions' : 'test_majority_session',
+				'percentage' : 'test_majority_percentage',
+			}
+			for (var attrname in result) {
+				console.log(attrname);
+				// map results to storage format
+				storename = name_map[attrname];
+				results[storename] = result[attrname];
+			}
+
 			replies++;
 			if ( 4 === replies ) {
 				jQuery( '#analytucsaudit_message').hide();
 				jQuery( '#analytucsaudit_results').show();
 				equal_tests_height();
+
+				var data = {
+						'action' : 'analyticsaudit_save',
+						'website' : domain,
+						'email' : jQuery('#analytucsaudit_email').attr('data-email'),
+						'gtm' : jQuery('#analytucsaudit_gtm').is(":checked"),
+						'tableau' : jQuery('#analytucsaudit_tableau').is(":checked"),
+						'bigquery' : jQuery('#analytucsaudit_bigquery').is(":checked"),
+						'datastudio' : jQuery('#analytucsaudit_datastudio').is(":checked"),
+						'unsure' : jQuery('#analytucsaudit_unsure').is(":checked"),
+						'ecom' : jQuery('#analytucsaudit_ecom').is(":checked"),
+						'lead' : jQuery('#analytucsaudit_lead').is(":checked"),
+						'publisher' : jQuery('#analytucsaudit_publisher').is(":checked"),
+				};
+				for (var attrname in results) {
+					data[attrname] = results[attrname];
+				}
+
+				jQuery.post(analyticsaudit_vars.ajax_url, data, function(response) {
+				});
+
 			}
 		}
 
@@ -91,7 +143,7 @@ function analyticsaudit() {
 				'property' : property,
 				'domain' : domain,
 		};
-		var actionables = ['goals_set_up', 'demographic_data', 'events', 'tracking_enhanced_ecomerce', 'measuring_goal_values'];
+		var actionables = ['goals_set_up', 'demographic_data', 'events', 'enhanced_ecommerce', 'goal_value'];
 
 		actionables.forEach( function (item) {
 			jQuery( '#analytucsaudit_test_'+ item).hide();
@@ -108,7 +160,7 @@ function analyticsaudit() {
 					}
 
 					// Make sure we display ecom and event only when user selects it.
-					if  ( 'tracking_enhanced_ecomerce' == item ) {
+					if  ( 'enhanced_ecommerce' == item ) {
 						if ( ecom_on ) {
 							jQuery( '#analytucsaudit_test_'+ item).show();
 						}
@@ -120,7 +172,7 @@ function analyticsaudit() {
 						jQuery( '#analytucsaudit_test_'+ item).show();
 					}
 				});
-				reply_processed();
+				reply_processed( result );
 			} else {
 				error_handler( response );
 			}
@@ -132,7 +184,7 @@ function analyticsaudit() {
 				'property' : property,
 				'domain' : domain,
 		};
-		var accessables = ['linked_search_console', 'customize_channel_group', 'content_groups'];
+		var accessables = ['adwords_linked', 'channel_groups', 'content_groups'];
 		accessables.forEach( function (item) {
 			jQuery( '#analytucsaudit_test_'+ item).hide();
 		});
@@ -146,7 +198,7 @@ function analyticsaudit() {
 						jQuery( '#analytucsaudit_test_'+ item).addClass('failed').show();
 					}
 				});
-				reply_processed();
+				reply_processed( result );
 			} else {
 				error_handler( response );
 			}
@@ -174,7 +226,7 @@ function analyticsaudit() {
 						jQuery( '#analytucsaudit_test_'+ item).addClass('failed').show();
 					}
 				});
-				reply_processed();
+				reply_processed( result );
 			} else {
 				error_handler( response );
 			}
@@ -198,8 +250,10 @@ function analyticsaudit() {
 				});
 				traffic_majority.forEach( function (item) {
 					jQuery( '#analytucsaudit_datapoint_'+ item).text( result['traffic_majority'][ item ] ).show();
+					// for storing nicely in results
+					result[ item ] = result['traffic_majority'][ item ];
 				});
-				reply_processed();
+				reply_processed( result );
 			} else {
 				error_handler( response );
 			}

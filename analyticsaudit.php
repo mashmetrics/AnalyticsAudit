@@ -21,6 +21,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit( 403 );
 }
 
+const DB_VERSION       = '1.3';
+const DB_TABLE         = 'analyticsaudit';
 const CLIENT_ID        = '538562510513-d99f5i1li5uc47vlb68llgmom3n48931.apps.googleusercontent.com';
 const CLIENT_SECRET    = 'aenqu6W4e_VcEeix20JoreQB';
 const SCOPE_ANALYTICS  = 'https://www.googleapis.com/auth/analytics.readonly';
@@ -86,7 +88,7 @@ EOT;
 <div><input type="checkbox" id="analytucsaudit_tableau"><label for="analytucsaudit_tableau">Tableau</label></div>
 <div><input type="checkbox" id="analytucsaudit_datastudio"><label for="analytucsaudit_datastudio">Data Studio</label></div>
 <div><input type="checkbox" id="analytucsaudit_bigquery"><label for="analytucsaudit_bigquery">Big Query</label></div>
-<div><input type="checkbox" id="analytucsaudit_unsue"><label for="analytucsaudit_unsue">Unsure</label></div>
+<div><input type="checkbox" id="analytucsaudit_unsue"><label for="analytucsaudit_unsure">Unsure</label></div>
 <div><input type="checkbox" id="analytucsaudit_gtm"><label for="analytucsaudit_gtm">Google Tag Manager</label></div>
 EOT;
 
@@ -98,6 +100,16 @@ EOT;
 
 
 	if ( isset( $_COOKIE[ TOKEN_COOKIE ] ) ) {
+		$email = '';
+		// Get user email.
+		$response = wp_remote_get( 'https://www.googleapis.com/plus/v1/people/me', array(
+			'headers' => array( 'Authorization' => 'Bearer ' . wp_unslash( $_COOKIE[ TOKEN_COOKIE ] ) ),
+		) );
+		if ( ! is_wp_error( $response ) && 200 === $response['response']['code'] ) {
+			$data = json_decode( $response['body'] );
+			$email = $data->emails[0]->value;
+		}
+
 		// Get GA accounts and views from the user's account.
 		$response = wp_remote_get( 'https://www.googleapis.com/analytics/v3/management/accountSummaries', array(
 			'headers' => array( 'Authorization' => 'Bearer ' . wp_unslash( $_COOKIE[ TOKEN_COOKIE ] ) ),
@@ -171,6 +183,7 @@ EOT;
 						}
 					}
 
+					$ret .= '<div id="analytucsaudit_email" data-email="' . esc_attr( $email ) . '"></div>';
 					$ret  = '<div class="analytucsaudit_profile">' . $ret . '</div>';
 					$ret .= '<div class="analytucsaudit_sitetype_checkboxes">';
 					$ret .= '<p>What do you want people to do on your website? (Check all that Apply)</p>';
@@ -210,17 +223,17 @@ EOT;
 							'raw_or_testing_view' => 'testing_view',
 						),
 						'actionable' => array(
-							'goals_set_up'               => 'goals',
-							'demographic_data'           => 'tracking_demographic',
-							'events'                     => 'tracking_events',
-							'tracking_enhanced_ecomerce' => 'enhanced_ecommerce',
-							'measuring_goal_values'      => 'measuring_goal_values',
+							'goals_set_up'       => 'goals',
+							'demographic_data'   => 'tracking_demographic',
+							'events'             => 'tracking_events',
+							'enhanced_ecommerce' => 'enhanced_ecommerce',
+							'goal_value'         => 'measuring_goal_values',
 						),
 						'accessible' => array(
-							'linked_search_console'   => 'search_console',
-							'customize_channel_group' => 'channel_groups',
-							'content_groups'          => 'content_groups',
-							'tools'                   => 'tools',
+							'adwords_linked' => 'adwords_linked',
+							'channel_groups' => 'channel_groups',
+							'content_groups' => 'content_groups',
+							'tools'          => 'tools',
 						),
 					);
 					foreach ( $tests as $type => $typetests ) {
@@ -435,6 +448,7 @@ add_action( 'admin_init', __NAMESPACE__ . '\settings_init' );
  */
 function admin_menu() {
 	add_options_page( 'Analytics Audit Settings', 'Analytics Audit', 'manage_options', 'analyticsauditsettings', __NAMESPACE__ . '\options_page' );
+	add_management_page( 'Export Analytics Audit', 'Export Analytics Audit', 'manage_options', 'analyticsauditexport', __NAMESPACE__ . '\export_page' );
 }
 
 /**
@@ -496,10 +510,35 @@ function settings_init() {
 	add_section( 'analyticsauditsettings_tracking_events_section', __( 'Tracking Events', 'analyticsaudit' ), 'tracking_events' );
 	add_section( 'analyticsauditsettings_enhanced_ecommerce_section', __( 'Enhanced Ecommerce', 'analyticsaudit' ), 'enhanced_ecommerce' );
 	add_section( 'analyticsauditsettings_measuring_goal_values_section', __( 'Measuring Goal Values', 'analyticsaudit' ), 'measuring_goal_values' );
-	add_section( 'analyticsauditsettings_search_console_section', __( 'Search Console and AdWords', 'analyticsaudit' ), 'search_console' );
+	add_section( 'analyticsauditsettings_adwords_linked_section', __( 'AdWords Linked', 'analyticsaudit' ), 'adwords_linked' );
 	add_section( 'analyticsauditsettings_channel_groups_section', __( 'Channel Groups', 'analyticsaudit' ), 'channel_groups' );
 	add_section( 'analyticsauditsettings_content_groups_section', __( 'Content Groups', 'analyticsaudit' ), 'content_groups' );
 	add_section( 'analyticsauditsettings_tools_section', __( 'Dashboard Tools', 'analyticsaudit' ), 'tools' );
+
+	// Add email notificationsection.
+	add_settings_section(
+		'analyticsauditsettings_email_section',
+		'Email notification for completed test',
+		'',
+		'analyticsauditsettings'
+	);
+
+	add_settings_field(
+		'analyticsauditsettings_email_section',
+		__( 'Address', 'analyticsaudit' ),
+		__NAMESPACE__ . '\email_address',
+		'analyticsauditsettings',
+		'analyticsauditsettings_email_section'
+	);
+
+	add_settings_field(
+		'analyticsauditsettings_tools_section_email_subject',
+		__( 'Subject', 'analyticsaudit' ),
+		__NAMESPACE__ . '\email_subject',
+		'analyticsauditsettings',
+		'analyticsauditsettings_email_section'
+	);
+
 }
 
 /**
@@ -540,6 +579,91 @@ function text_setting( $args ) {
 }
 
 /**
+ * Emit the input element for the email address for notifications.
+ *
+ * @since 1.0
+ */
+function email_address() {
+	$options = get_option( 'analyticsauditsettings', array() );
+	$value   = '';
+	if ( isset( $options['email_address'] ) ) {
+		$value = $options['email_address'];
+	}
+
+	echo '<input name="analyticsauditsettings[email_address]" value="' . esc_attr( $value ) . '">';
+}
+
+/**
+ * Emit the input element for the email address for notifications.
+ *
+ * @since 1.0
+ */
+function email_subject() {
+	$options = get_option( 'analyticsauditsettings', array() );
+	$value   = '';
+	if ( isset( $options['email_subject'] ) ) {
+		$value = $options['email_subject'];
+	}
+
+	echo '<input name="analyticsauditsettings[email_subject]" value="' . esc_attr( $value ) . '">';
+}
+
+/**
+ *  Convert the internal value of a test result to a human readable text.
+ *
+ *  @since 1.0
+ *
+ *  @param string $test The internal name of a test.
+ *  @param mixed  $value The internal value of a test.
+ *
+ *  @return string The human readable value of the test
+ */
+function test_result_to_text( $test, $value ) {
+	$test_text_conversion = array(
+		'email'                    => 'none',
+		'website'                  => 'none',
+		'gtm'                      => 'onoff',
+		'tableau'                  => 'onoff',
+		'bigquery'                 => 'onoff',
+		'datastudio'               => 'onoff',
+		'unsure'                   => 'onoff',
+		'ecom'                     => 'onoff',
+		'lead'                     => 'onoff',
+		'publisher'                => 'onoff',
+		'test_setup'               => 'passfail',
+		'test_spam'                => 'passfail',
+		'test_raw'                 => 'passfail',
+		'test_demographic'         => 'passfail',
+		'test_ecom'                => 'passfail',
+		'test_events'              => 'passfail',
+		'test_goals'               => 'passfail',
+		'test_goal_value'          => 'passfail',
+		'test_adwords'             => 'passfail',
+		'test_channelgroups'       => 'passfail',
+		'test_contentgroups'       => 'passfail',
+		'test_sessions'            => 'none',
+		'test_bouncerate'          => 'none',
+		'test_tophost'             => 'none',
+		'test_majority_channel'    => 'none',
+		'test_majority_session'    => 'none',
+		'test_majority_percentage' => 'none',
+	);
+
+	if ( isset( $test_text_conversion[ $test ] ) ) {
+		switch ( $test_text_conversion[ $test ] ) {
+			case 'onoff':
+				$value = ( $value ) ? 'On' : 'Off';
+				break;
+			case 'passfail':
+				$value = ( $value ) ? 'Pass' : 'Fail';
+				break;
+		}
+	}
+
+	return $value;
+}
+
+/**
  * Output the settings page.
  *
  * @since 1.0
@@ -556,3 +680,257 @@ function options_page() {
 		echo '</form>';
 		echo '</div>';
 }
+
+/**
+ *  Storing data in the DB and exporting it.
+ */
+
+/**
+ *  Create the table in the DB.
+ */
+function create_table() {
+	global $wpdb;
+
+	$options = get_option( 'analyticsauditsettings', array() );
+
+	// check if we need to update the table structure.
+	if ( ! isset( $options['db_version'] ) || version_compare( $options['db_version'], DB_VERSION ) < 0 ) {
+
+		$table_name = $wpdb->prefix . DB_TABLE;
+
+		$charset_collate = $wpdb->get_charset_collate();
+
+		$sql = "CREATE TABLE $table_name (
+		  id MEDIUMINT NOT NULL AUTO_INCREMENT,
+		  time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+		  email VARCHAR(255) NOT NULL,
+		  website VARCHAR(255) NOT NULL,
+		  gtm BOOLEAN NOT NULL DEFAULT FALSE,
+		  tableau BOOLEAN NOT NULL DEFAULT FALSE,
+		  bigquery BOOLEAN NOT NULL DEFAULT FALSE,
+		  datastudio BOOLEAN NOT NULL DEFAULT FALSE,
+		  unsure BOOLEAN NOT NULL DEFAULT FALSE,
+		  ecom BOOLEAN NOT NULL DEFAULT FALSE,
+		  lead BOOLEAN NOT NULL DEFAULT FALSE,
+		  publisher BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_setup BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_spam BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_raw BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_demographic BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_ecom BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_events BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_goals BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_goal_value BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_adwords BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_channelgroups BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_contentgroups BOOLEAN NOT NULL DEFAULT FALSE,
+		  test_sessions INT UNSIGNED NOT NULL,
+		  test_bouncerate DECIMAL(5,2) NOT NULL,
+		  test_tophost VARCHAR(255) NOT NULL,
+		  test_majority_channel VARCHAR(255) NOT NULL,
+		  test_majority_session INT UNSIGNED NOT NULL,
+		  test_majority_percentage DECIMAL(5,2) NOT NULL,
+		  PRIMARY KEY  (id)
+		) $charset_collate;";
+
+		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+		dbDelta( $sql );
+	}
+}
+
+/**
+ * Handler to store results in the DB.
+ *
+ * @since 1.0
+ */
+function save() {
+
+	global $wpdb;
+
+	$data = array();
+
+	$fields = array(
+		'email'                    => 'string',
+		'website'                  => 'string',
+		'gtm'                      => 'bool',
+		'tableau'                  => 'bool',
+		'bigquery'                 => 'bool',
+		'datastudio'               => 'bool',
+		'unsure'                   => 'bool',
+		'ecom'                     => 'bool',
+		'lead'                     => 'bool',
+		'publisher'                => 'bool',
+		'test_setup'               => 'bool',
+		'test_spam'                => 'bool',
+		'test_raw'                 => 'bool',
+		'test_demographic'         => 'bool',
+		'test_ecom'                => 'bool',
+		'test_events'              => 'bool',
+		'test_goals'               => 'bool',
+		'test_goal_value'          => 'bool',
+		'test_adwords'             => 'bool',
+		'test_channelgroups'       => 'bool',
+		'test_contentgroups'       => 'bool',
+		'test_sessions'            => 'int',
+		'test_bouncerate'          => 'percentage',
+		'test_tophost'             => 'string',
+		'test_majority_channel'    => 'string',
+		'test_majority_session'    => 'int',
+		'test_majority_percentage' => 'percentage',
+	);
+
+	$test_text = array(
+		'email'                    => 'Email',
+		'website'                  => 'Website',
+		'gtm'                      => 'GTM Checkbox',
+		'tableau'                  => 'Tableau Checkbox',
+		'bigquery'                 => 'BigQuery Checkbox',
+		'datastudio'               => 'DataStudio Checkbox',
+		'unsure'                   => 'Unsure Checkbox',
+		'ecom'                     => 'Ecommerce Checkbox',
+		'lead'                     => 'Lead Generation Checkbox',
+		'publisher'                => 'Publisher Checkbox',
+		'test_setup'               => 'Setup Test',
+		'test_spam'                => 'Spam Test',
+		'test_raw'                 => 'Raw Test',
+		'test_demographic'         => 'Demographoc Test',
+		'test_ecom'                => 'Ecommerce Test',
+		'test_events'              => 'Events Test',
+		'test_goals'               => 'Goals Setup Test',
+		'test_goal_value'          => 'Goal Value Test',
+		'test_adwords'             => 'Adwords Linked Test',
+		'test_channelgroups'       => 'Channel Groups Test',
+		'test_contentgroups'       => 'Content Groups Test',
+		'test_sessions'            => 'Number of Sessions',
+		'test_bouncerate'          => 'Bouncerate',
+		'test_tophost'             => 'Top Host',
+		'test_majority_channel'    => 'Name of Majority Channel',
+		'test_majority_session'    => 'Number of Majority Sessions',
+		'test_majority_percentage' => 'Percentage of Majority Sessions',
+	);
+
+	create_table();
+
+	foreach ( $fields as $field => $type ) {
+		$value = wp_unslash( $_POST[ $field ] );
+		switch ( $type ) {
+			case 'bool':
+				$value = ( 'false' === $value ) ? 0 : 1;
+				break;
+			case 'int':
+				$value = intval( $value );
+				break;
+			case 'percentage':
+				$value = trim( $value, '%' );
+				$value = floatval( $value );
+				break;
+		}
+		$data[ $field ] = $value;
+	}
+
+	$o = get_option( 'analyticsauditsettings', array() );
+	if ( isset( $o['email_address'] ) ) {
+		$content = '';
+		foreach ( $data as $k => $v ) {
+			$content .= $test_text[ $k ] . ' : ' . test_result_to_text( $k, $v ) . "\r\n";
+		}
+		wp_mail( $o['email_address'], $o['email_subject'], $content );
+	}
+	$wpdb->show_errors();
+	$wpdb->insert( $wpdb->prefix . DB_TABLE, $data );
+	die();
+}
+
+add_action( 'wp_ajax_analyticsaudit_save', __NAMESPACE__ . '\save' );
+add_action( 'wp_ajax_nopriv_analyticsaudit_save', __NAMESPACE__ . '\save' );
+
+/**
+ *  Export CSV
+ */
+
+/**
+ * Output the export page.
+ *
+ * @since 1.0
+ */
+function export_page() {
+	?>
+	<div class="wrap">
+		<h2>Analytics Audit Export</h2>
+		<p><a href="<?php echo esc_url( wp_nonce_url( site_url( '?aa_export_csv=1' ) ) ); ?>">Export CSV</a></p>
+	</div>
+	<?php
+}
+
+/**
+ *  Check if csv export is triggered and generate the CSV.
+ *
+ *  @since 1.0
+ */
+function export_csv() {
+	global $wpdb;
+
+	if ( isset( $_GET['aa_export_csv'] ) ) {
+		if ( ! isset( $_GET['_wpnonce'] ) || ! wp_verify_nonce( wp_unslash( $_GET['_wpnonce'] ) ) ) {
+			// nonce test failed, bail.
+			return;
+		}
+		$filename = 'Analytics-Audit-CSV-' . date( 'm/d/Y-h:i' ) . '.csv';
+		header( 'Content-type: text/csv' );
+		header( 'Content-Disposition: attachment; filename=' . $filename );
+		header( 'Pragma: no-cache' );
+		header( 'Expires: 0' );
+
+		$columns = array(
+			'time'                     => 'Time',
+			'email'                    => 'Email',
+			'website'                  => 'Website',
+			'gtm'                      => 'GTM Checkbox',
+			'tableau'                  => 'Tableau Checkbox',
+			'bigquery'                 => 'BigQuery Checkbox',
+			'datastudio'               => 'DataStudio Checkbox',
+			'unsure'                   => 'Unsure Checkbox',
+			'ecom'                     => 'Ecommerce Checkbox',
+			'lead'                     => 'Lead Generation Checkbox',
+			'publisher'                => 'Publisher Checkbox',
+			'test_setup'               => 'Setup Test',
+			'test_spam'                => 'Spam Test',
+			'test_raw'                 => 'Raw Test',
+			'test_demographic'         => 'Demographoc Test',
+			'test_ecom'                => 'Ecommerce Test',
+			'test_events'              => 'Events Test',
+			'test_goals'               => 'Goals Setup Test',
+			'test_goal_value'          => 'Goal Value Test',
+			'test_adwords'             => 'Adwords Linked Test',
+			'test_channelgroups'       => 'Channel Groups Test',
+			'test_contentgroups'       => 'Content Groups Test',
+			'test_sessions'            => 'Number of Sessions',
+			'test_bouncerate'          => 'Bouncerate',
+			'test_tophost'             => 'Top Host',
+			'test_majority_channel'    => 'Name of Majority Channel',
+			'test_majority_session'    => 'Number of Majority Sessions',
+			'test_majority_percentage' => 'Percentage of Majority Sessions',
+		);
+
+		$out = fopen('php://output', 'w');
+		$headers = array();
+		foreach ( $columns as $c ) {
+			$headers[] = $c;
+		}
+		fputcsv( $out, $headers );
+
+		$rows = $wpdb->get_results( 'SELECT * FROM ' . $wpdb->prefix . DB_TABLE );
+		foreach ( $rows as $row ) {
+			$values = array();
+			foreach ( $columns as $test => $c ) {
+				$values[] = test_result_to_text( $test, $row->{$test} );
+			}
+			fputcsv( $out, $values );
+		}
+		fclose( $out );
+
+		die();
+	}
+}
+
+add_action( 'init', __NAMESPACE__ . '\export_csv', 1 );
