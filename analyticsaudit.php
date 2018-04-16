@@ -98,7 +98,8 @@ EOT;
 <div><input type="checkbox" id="analytucsaudit_publisher"><label for="analytucsaudit_publisher">Read my Blog</label></div>
 EOT;
 
-
+	$user = '';
+	$api_fail = false;
 	if ( isset( $_COOKIE[ TOKEN_COOKIE ] ) ) {
 		$email = '';
 		// Get user email.
@@ -108,159 +109,177 @@ EOT;
 		if ( ! is_wp_error( $response ) && 200 === $response['response']['code'] ) {
 			$data = json_decode( $response['body'] );
 			$email = $data->emails[0]->value;
+		} else {
+			$api_fail = true;
 		}
 
 		// Get GA accounts and views from the user's account.
-		$response = wp_remote_get( 'https://www.googleapis.com/analytics/v3/management/accountSummaries', array(
-			'headers' => array( 'Authorization' => 'Bearer ' . wp_unslash( $_COOKIE[ TOKEN_COOKIE ] ) ),
-		) );
-		if ( ! is_wp_error( $response ) && 200 === $response['response']['code'] ) {
+		// This needs to be a loop as the number of items in a response is limited to 1000,
+		// and there are accounts with more than that.
+		$start_index = 1;
+		$accounts = array();
+		$properties = array();
+		$profiles = array();
+		while ( ! $api_fail ) { // to exit code need to break, or an api faulue happened.
+			$response = wp_remote_get( 'https://www.googleapis.com/analytics/v3/management/accountSummaries?start-index=' . $start_index .'&max-results=1000', array(
+				'headers' => array( 'Authorization' => 'Bearer ' . wp_unslash( $_COOKIE[ TOKEN_COOKIE ] ) ),
+			) );
+			if ( is_wp_error( $response ) || 200 !== $response['response']['code'] ) {
+				$api_fail = true;
+				break;
+			}
 			$data = json_decode( $response['body'] );
+
 			if ( null !== $data ) {
 				$user     = $data->username;
-				$accounts = array();
 				foreach ( $data->items as $item ) {
-					$properties = array();
 					foreach ( $item->webProperties as $property ) {
-						$profiles = array();
 						foreach ( $property->profiles as $profile ) {
-							$profile    = array(
+							$inner_profile    = array(
 								'id'   => $profile->id,
 								'name' => $profile->name,
 							);
-							$profiles[] = $profile;
+							$profiles[ $profile->id ] = $inner_profile;
 						}
-						$property     = array(
+						$inner_property     = array(
 							'id'       => $property->id,
 							'name'     => $property->name,
 							'url'      => $property->websiteUrl,
 							'profiles' => $profiles,
 						);
-						$properties[] = $property;
+						$properties[ $property->id ] = $inner_property;
 					}
-					$accounts[] = array(
+					$accounts[ $item->id ] = array(
 						'id'         => $item->id,
 						'name'       => $item->name,
 						'properties' => $properties,
 					);
 				}
+				$start_index += count( $data->items );
+				if ( $start_index >= $data->totalResults ) {
+					// process everything, time to bail.
+					break;
+				}
+			} else {
+				// some error, bail.
+				break;
+			}
+		}
 
-				if ( empty( $accounts ) ) {
-					$ret = '<p>There are no Google Analytics accounts associated with this user ' . esc_html( $user ) . '</p>';
-				} else {
-					$ret = '';
+		if ( ! $api_fail ) {
+			if ( empty( $accounts ) ) {
+				$ret = '<p>There are no Google Analytics accounts associated with this user ' . esc_html( $user ) . '</p>';
+			} else {
+				$ret = '';
 
-					// Add styling.
-					$ret .= '<style>';
-					ob_start();
-					include __DIR__ . '/css/analyticsaudit.css';
-					$ret .= ob_get_contents();
-					ob_end_clean();
-					$ret .= '</style>';
-					$ret .= '<p class="analytucsaudit_accounts"><label for="analyticsaudit_account">Google Account</label><select id="analyticsaudit_account">';
-					foreach ( $accounts as $account ) {
-						$ret .= '<option value="' . esc_attr( $account['id'] ) . '">' . esc_html( $account['name'] ) . '</option>';
+				// Add styling.
+				$ret .= '<style>';
+				ob_start();
+				include __DIR__ . '/css/analyticsaudit.css';
+				$ret .= ob_get_contents();
+				ob_end_clean();
+				$ret .= '</style>';
+				$ret .= '<p class="analytucsaudit_accounts"><label for="analyticsaudit_account">Google Account</label><select id="analyticsaudit_account">';
+				foreach ( $accounts as $account ) {
+					$ret .= '<option value="' . esc_attr( $account['id'] ) . '">' . esc_html( $account['name'] ) . '</option>';
+				}
+				$ret .= '</select></p>';
+
+				foreach ( $accounts as $account ) {
+					$ret .= '<p class="analytucsaudit_properties" data-account=' . esc_attr( $account['id'] ) . '><label for="analyticsaudit_property-' . esc_attr( $account['id'] ) . '">Property (Website)</label><select id="analyticsaudit_property-' . esc_attr( $account['id'] ) . '">';
+					foreach ( $account['properties'] as $property ) {
+						$ret .= '<option data-url="' . esc_attr( $property['url'] ) . '" value="' . esc_attr( $property['id'] ) . '">' . esc_html( $property['name'] ) . '</option>';
 					}
 					$ret .= '</select></p>';
+				}
 
-					foreach ( $accounts as $account ) {
-						$ret .= '<p class="analytucsaudit_properties" data-account=' . esc_attr( $account['id'] ) . '><label for="analyticsaudit_property-' . esc_attr( $account['id'] ) . '">Property (Website)</label><select id="analyticsaudit_property-' . esc_attr( $account['id'] ) . '">';
-						foreach ( $account['properties'] as $property ) {
-							$ret .= '<option value="' . esc_attr( $property['id'] ) . '">' . esc_html( $property['name'] ) . '</option>';
+				foreach ( $accounts as $account ) {
+					foreach ( $account['properties'] as $property ) {
+						$property_id = esc_attr( $account['id'] ) . '-' . esc_attr( $property['id'] );
+
+						$ret .= '<p class="analytucsaudit_profiles" data-property=' . $property_id . '><label for="analyticsaudit_profile-' . $property_id . '">View</label><select id="analyticsaudit_profile-' . $property_id . '">';
+						foreach ( $property['profiles'] as $profile ) {
+							$ret .= '<option value="' . esc_attr( $profile['id'] ) . '">' . esc_html( $profile['name'] ) . '</option>';
 						}
 						$ret .= '</select></p>';
 					}
+				}
 
-					foreach ( $accounts as $account ) {
-						foreach ( $account['properties'] as $property ) {
-							$property_id = esc_attr( $account['id'] ) . '-' . esc_attr( $property['id'] );
+				$ret .= '<div id="analytucsaudit_email" data-email="' . esc_attr( $email ) . '"></div>';
+				$ret  = '<div class="analytucsaudit_profile">' . $ret . '</div>';
+				$ret .= '<div class="analytucsaudit_sitetype_checkboxes">';
+				$ret .= '<p>What do you want people to do on your website? (Check all that Apply)</p>';
+				$ret .= $websitetype_checkboxes . '<div class="sf"></div></div>';
+				$ret .= '<div class="analytucsaudit_checkboxes">';
+				$ret .= '<p>Other Data Tools Used (check all that apply)</p>';
+				$ret .= $checkboxes . '</div>';
+				$ret .= '<div class="analytucsaudit-buttons"><button class="fetch-button" type="button">' . $fetch_text . '</button>' . $retry_form . '</div>';
+				$ret .= '<div id="analytucsaudit_message">Running the tests...</div>';
+				$ret .= '<div id="analytucsaudit_results" style="display:none">';
 
-							$ret .= '<p class="analytucsaudit_profiles" data-property=' . $property_id . '><label for="analyticsaudit_profile-' . $property_id . '">View</label><select id="analyticsaudit_profile-' . $property_id . '">';
-							foreach ( $property['profiles'] as $profile ) {
-								$ret .= '<option value="' . esc_attr( $profile['id'] ) . '">' . esc_html( $profile['name'] ) . '</option>';
-							}
-							$ret .= '</select></p>';
-						}
-					}
+				$options = get_option( 'analyticsauditsettings' );
 
-					$ret .= '<div id="analytucsaudit_email" data-email="' . esc_attr( $email ) . '"></div>';
-					$ret  = '<div class="analytucsaudit_profile">' . $ret . '</div>';
-					$ret .= '<div class="analytucsaudit_sitetype_checkboxes">';
-					$ret .= '<p>What do you want people to do on your website? (Check all that Apply)</p>';
-					$ret .= $websitetype_checkboxes . '<div class="sf"></div></div>';
-					$ret .= '<div class="analytucsaudit_checkboxes">';
-					$ret .= '<p>Other Data Tools Used (check all that apply)</p>';
-					$ret .= $checkboxes . '</div>';
-					$ret .= '<div class="analytucsaudit-buttons"><button class="fetch-button" type="button">' . $fetch_text . '</button>' . $retry_form . '</div>';
-					$ret .= '<div id="analytucsaudit_message">Running the tests...</div>';
-					$ret .= '<div id="analytucsaudit_results" style="display:none">';
+				$header = array(
+					'accurate '   => 'accurate_header',
+					'actionable ' => 'actionable_header',
+					'accessible ' => 'accessiable_header',
+				);
 
-					$options = get_option( 'analyticsauditsettings' );
+				// header blurb.
+				$ret .= '<div class="analytucsaudit_tests_header">';
+				foreach ( $header as $id => $prefix ) {
+					$ret .= '<div class="analytucsaudit_test_description" id="analytucsaudit_test_description_' . esc_attr( $id ) . '">';
+					$ret .= '<h4>' . esc_html( $options[ $prefix . '_title' ] ) . '</h4>';
+					$ret .= '<div>' . wpautop( wptexturize( $options[ $prefix . '_text' ] ) ) . '</div>';
+					$ret .= '</div>';
+				}
+				$ret .= '<div style="clear:both"></div>';
+				$ret .= '</div>';
 
-					$header = array(
-						'accurate '   => 'accurate_header',
-						'actionable ' => 'actionable_header',
-						'accessible ' => 'accessiable_header',
-					);
-
-					// header blurb.
-					$ret .= '<div class="analytucsaudit_tests_header">';
-					foreach ( $header as $id => $prefix ) {
-						$ret .= '<div class="analytucsaudit_test_description" id="analytucsaudit_test_description_' . esc_attr( $id ) . '">';
+				// Tests status.
+				$tests = array(
+					'accurate'   => array(
+						'gtm'                 => 'gtm',
+						'setup_correct'       => 'setup_issues',
+						'filltering_spam'     => 'spam',
+						'raw_or_testing_view' => 'testing_view',
+					),
+					'actionable' => array(
+						'goals_set_up'       => 'goals',
+						'demographic_data'   => 'tracking_demographic',
+						'events'             => 'tracking_events',
+						'enhanced_ecommerce' => 'enhanced_ecommerce',
+						'goal_value'         => 'measuring_goal_values',
+					),
+					'accessible' => array(
+						'adwords_linked' => 'adwords_linked',
+						'channel_groups' => 'channel_groups',
+						'content_groups' => 'content_groups',
+						'tools'          => 'tools',
+					),
+				);
+				foreach ( $tests as $type => $typetests ) {
+					$ret .= '<div class="analytucsaudit_test_type" id="analytucsaudit_test_type-' . esc_attr( $type ) . '">';
+					foreach ( $typetests as $id => $prefix ) {
+						$ret .= '<div class="analytucsaudit_test" id="analytucsaudit_test_' . esc_attr( $id ) . '">';
 						$ret .= '<h4>' . esc_html( $options[ $prefix . '_title' ] ) . '</h4>';
 						$ret .= '<div>' . wpautop( wptexturize( $options[ $prefix . '_text' ] ) ) . '</div>';
 						$ret .= '</div>';
 					}
-					$ret .= '<div style="clear:both"></div>';
-					$ret .= '</div>';
-
-					// Tests status.
-					$tests = array(
-						'accurate'   => array(
-							'gtm'                 => 'gtm',
-							'setup_correct'       => 'setup_issues',
-							'filltering_spam'     => 'spam',
-							'raw_or_testing_view' => 'testing_view',
-						),
-						'actionable' => array(
-							'goals_set_up'       => 'goals',
-							'demographic_data'   => 'tracking_demographic',
-							'events'             => 'tracking_events',
-							'enhanced_ecommerce' => 'enhanced_ecommerce',
-							'goal_value'         => 'measuring_goal_values',
-						),
-						'accessible' => array(
-							'adwords_linked' => 'adwords_linked',
-							'channel_groups' => 'channel_groups',
-							'content_groups' => 'content_groups',
-							'tools'          => 'tools',
-						),
-					);
-					foreach ( $tests as $type => $typetests ) {
-						$ret .= '<div class="analytucsaudit_test_type" id="analytucsaudit_test_type-' . esc_attr( $type ) . '">';
-						foreach ( $typetests as $id => $prefix ) {
-							$ret .= '<div class="analytucsaudit_test" id="analytucsaudit_test_' . esc_attr( $id ) . '">';
-							$ret .= '<h4>' . esc_html( $options[ $prefix . '_title' ] ) . '</h4>';
-							$ret .= '<div>' . wpautop( wptexturize( $options[ $prefix . '_text' ] ) ) . '</div>';
-							$ret .= '</div>';
-						}
-						$ret .= '</div>';
-					}
-					$ret .= '<div style="clear:both"></div>';
-
-					// Data points HTML.
-					$ret .= '<div>Total Sessions:<span id="analytucsaudit_datapoint_total_sessions"></span></div>';
-					$ret .= '<div>Bounce Rate:<span id="analytucsaudit_datapoint_bounce_rate"></span></div>';
-					$ret .= '<div>Top Hostname:<span id="analytucsaudit_datapoint_top_hostname"></span></div>';
-					$ret .= '<div>Traffic Majority:</div>';
-					$ret .= '<div>Channel:<span id="analytucsaudit_datapoint_channel"></span></div>';
-					$ret .= '<div>Sessions:<span id="analytucsaudit_datapoint_sessions"></span></div>';
-					$ret .= '<div>Percentage:<span id="analytucsaudit_datapoint_percentage"></span></div>';
-
 					$ret .= '</div>';
 				}
-			} else {
-				$ret = $form;
+				$ret .= '<div style="clear:both"></div>';
+
+				// Data points HTML.
+				$ret .= '<div>Total Sessions:<span id="analytucsaudit_datapoint_total_sessions"></span></div>';
+				$ret .= '<div>Bounce Rate:<span id="analytucsaudit_datapoint_bounce_rate"></span></div>';
+				$ret .= '<div>Top Hostname:<span id="analytucsaudit_datapoint_top_hostname"></span></div>';
+				$ret .= '<div>Traffic Majority:</div>';
+				$ret .= '<div>Channel:<span id="analytucsaudit_datapoint_channel"></span></div>';
+				$ret .= '<div>Sessions:<span id="analytucsaudit_datapoint_sessions"></span></div>';
+				$ret .= '<div>Percentage:<span id="analytucsaudit_datapoint_percentage"></span></div>';
+
+				$ret .= '</div>';
 			}
 		} else {
 			$ret = $form;
@@ -614,7 +633,7 @@ function email_subject() {
  *  @since 1.0
  *
  *  @param string $test The internal name of a test.
- *  @param mixed  $value The internal value of a test.
+ *  @param mixed  $value  The internal value of a test.
  *
  *  @return string The human readable value of the test
  */
@@ -750,32 +769,32 @@ function save() {
 	$data = array();
 
 	$fields = array(
-		'email'                    => 'string',
-		'website'                  => 'string',
-		'gtm'                      => 'bool',
-		'tableau'                  => 'bool',
-		'bigquery'                 => 'bool',
-		'datastudio'               => 'bool',
-		'unsure'                   => 'bool',
-		'ecom'                     => 'bool',
-		'lead'                     => 'bool',
-		'publisher'                => 'bool',
-		'test_setup'               => 'bool',
-		'test_spam'                => 'bool',
-		'test_raw'                 => 'bool',
-		'test_demographic'         => 'bool',
-		'test_ecom'                => 'bool',
-		'test_events'              => 'bool',
-		'test_goals'               => 'bool',
-		'test_goal_value'          => 'bool',
-		'test_adwords'             => 'bool',
-		'test_channelgroups'       => 'bool',
-		'test_contentgroups'       => 'bool',
-		'test_sessions'            => 'int',
-		'test_bouncerate'          => 'percentage',
-		'test_tophost'             => 'string',
-		'test_majority_channel'    => 'string',
-		'test_majority_session'    => 'int',
+		'email' => 'string',
+		'website' => 'string',
+		'gtm' => 'bool',
+		'tableau' => 'bool',
+		'bigquery' => 'bool',
+		'datastudio' => 'bool',
+		'unsure' => 'bool',
+		'ecom' => 'bool',
+		'lead' => 'bool',
+		'publisher' => 'bool',
+		'test_setup' => 'bool',
+		'test_spam' => 'bool',
+		'test_raw' => 'bool',
+		'test_demographic' => 'bool',
+		'test_ecom' => 'bool',
+		'test_events' => 'bool',
+		'test_goals' => 'bool',
+		'test_goal_value' => 'bool',
+		'test_adwords' => 'bool',
+		'test_channelgroups' => 'bool',
+		'test_contentgroups' => 'bool',
+		'test_sessions' => 'int',
+		'test_bouncerate' => 'percentage',
+		'test_tophost' => 'string',
+		'test_majority_channel' => 'string',
+		'test_majority_session' => 'int',
 		'test_majority_percentage' => 'percentage',
 	);
 

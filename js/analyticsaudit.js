@@ -34,7 +34,7 @@ function analyticsaudit() {
 		jQuery( '#analytucsaudit_results').hide();
 		var account = jQuery( '#analyticsaudit_account' ).val();
 		var property = jQuery( '[data-account=' + account + '] select' ).val();
-		var domain = jQuery( '[data-account=' + account + '] select option:selected' ).text();
+		var domain = jQuery( '[data-account=' + account + '] select option:selected' ).data('url');
 		var profile = jQuery( '[data-property=' + account + '-' + property + '] select' ).val();
 
 		var replies = 0;
