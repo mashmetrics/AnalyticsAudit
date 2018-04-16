@@ -144,7 +144,7 @@ EOT;
 						$inner_property     = array(
 							'id'       => $property->id,
 							'name'     => $property->name,
-							'url'      => $property->websiteUrl,
+							'url'      => str_replace( array( 'http://', 'https://' ), '', $property->websiteUrl),
 							'profiles' => $profiles,
 						);
 						$properties[ $property->id ] = $inner_property;
