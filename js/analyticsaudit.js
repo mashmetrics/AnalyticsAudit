@@ -6,7 +6,7 @@ function analyticsaudit() {
 		var profile = jQuery( '[data-property=' + account + '-' + property + '] select' ).val();
 
 		jQuery( '.analytucsaudit_properties' ).hide();
-		jQuery( '.analytucsaudit_profiles' ).hide();
+		jQuery( '.analytucsaudit_profiles p' ).hide();
 
 		jQuery( '[data-account=' + account + ']' ).show();
 		jQuery( '[data-property=' + account + '-' + property + ']' ). show();

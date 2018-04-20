@@ -98,7 +98,7 @@ EOT;
 <div><input type="checkbox" id="analytucsaudit_publisher"><label for="analytucsaudit_publisher">Read my Blog</label></div>
 EOT;
 
-	$user = '';
+	$user     = '';
 	$api_fail = false;
 	if ( isset( $_COOKIE[ TOKEN_COOKIE ] ) ) {
 		$email = '';
@@ -107,7 +107,7 @@ EOT;
 			'headers' => array( 'Authorization' => 'Bearer ' . wp_unslash( $_COOKIE[ TOKEN_COOKIE ] ) ),
 		) );
 		if ( ! is_wp_error( $response ) && 200 === $response['response']['code'] ) {
-			$data = json_decode( $response['body'] );
+			$data  = json_decode( $response['body'] );
 			$email = $data->emails[0]->value;
 		} else {
 			$api_fail = true;
@@ -117,9 +117,7 @@ EOT;
 		// This needs to be a loop as the number of items in a response is limited to 1000,
 		// and there are accounts with more than that.
 		$start_index = 1;
-		$accounts = array();
-		$properties = array();
-		$profiles = array();
+		$accounts    = array();
 		while ( ! $api_fail ) { // to exit code need to break, or an api faulue happened.
 			$response = wp_remote_get( 'https://www.googleapis.com/analytics/v3/management/accountSummaries?start-index=' . $start_index .'&max-results=1000', array(
 				'headers' => array( 'Authorization' => 'Bearer ' . wp_unslash( $_COOKIE[ TOKEN_COOKIE ] ) ),
@@ -131,29 +129,48 @@ EOT;
 			$data = json_decode( $response['body'] );
 
 			if ( null !== $data ) {
-				$user     = $data->username;
+				$user = $data->username;
 				foreach ( $data->items as $item ) {
+					$properties = array();
 					foreach ( $item->webProperties as $property ) {
+						if ( ! isset( $property->profiles ) ) {
+							// If the property has no profiles, it is of no interest.
+							break;
+						}
+						$profiles = array();
 						foreach ( $property->profiles as $profile ) {
-							$inner_profile    = array(
+							$inner_profile = array(
 								'id'   => $profile->id,
 								'name' => $profile->name,
 							);
+
 							$profiles[ $profile->id ] = $inner_profile;
 						}
-						$inner_property     = array(
-							'id'       => $property->id,
-							'name'     => $property->name,
-							'url'      => str_replace( array( 'http://', 'https://' ), '', $property->websiteUrl),
-							'profiles' => $profiles,
-						);
-						$properties[ $property->id ] = $inner_property;
+						if ( ! isset( $property->websiteUrl ) ) {
+							// If the property has no URL, it is probably not fully configured and therefor of no interest.
+							break;
+						}
+
+						if ( 0 < count( $profiles ) ) {
+							// Skip showing properties with no profiles.
+							$inner_property = array(
+								'id'       => $property->id,
+								'name'     => $property->name,
+								'url'      => str_replace( array( 'http://', 'https://' ), '', $property->websiteUrl ),
+								'profiles' => $profiles,
+							);
+
+							$properties[ $property->id ] = $inner_property;
+						}
 					}
-					$accounts[ $item->id ] = array(
-						'id'         => $item->id,
-						'name'       => $item->name,
-						'properties' => $properties,
-					);
+					if ( 0 < count( $properties ) ) {
+						// Skip showing accounts with no useful properties.
+						$accounts[ $item->id ] = array(
+							'id'         => $item->id,
+							'name'       => $item->name,
+							'properties' => $properties,
+						);
+					}
 				}
 				$start_index += count( $data->items );
 				if ( $start_index >= $data->totalResults ) {
@@ -178,7 +195,9 @@ EOT;
 				include __DIR__ . '/css/analyticsaudit.css';
 				$ret .= ob_get_contents();
 				ob_end_clean();
+
 				$ret .= '</style>';
+				$ret .= '<div class="analytucsaudit_profile">';
 				$ret .= '<p class="analytucsaudit_accounts"><label for="analyticsaudit_account">Google Account</label><select id="analyticsaudit_account">';
 				foreach ( $accounts as $account ) {
 					$ret .= '<option value="' . esc_attr( $account['id'] ) . '">' . esc_html( $account['name'] ) . '</option>';
@@ -193,20 +212,21 @@ EOT;
 					$ret .= '</select></p>';
 				}
 
+				$ret .= '<div  class="analytucsaudit_profiles">';
 				foreach ( $accounts as $account ) {
 					foreach ( $account['properties'] as $property ) {
 						$property_id = esc_attr( $account['id'] ) . '-' . esc_attr( $property['id'] );
 
-						$ret .= '<p class="analytucsaudit_profiles" data-property=' . $property_id . '><label for="analyticsaudit_profile-' . $property_id . '">View</label><select id="analyticsaudit_profile-' . $property_id . '">';
+						$ret .= '<p data-property="' . $property_id . '"><label for="aa_profile-' . $property_id . '">View</label><select id="aa_profile-' . $property_id . '">';
 						foreach ( $property['profiles'] as $profile ) {
 							$ret .= '<option value="' . esc_attr( $profile['id'] ) . '">' . esc_html( $profile['name'] ) . '</option>';
 						}
 						$ret .= '</select></p>';
 					}
 				}
-
+				$ret .= '</div>';
 				$ret .= '<div id="analytucsaudit_email" data-email="' . esc_attr( $email ) . '"></div>';
-				$ret  = '<div class="analytucsaudit_profile">' . $ret . '</div>';
+				$ret .= '</div>';
 				$ret .= '<div class="analytucsaudit_sitetype_checkboxes">';
 				$ret .= '<p>What do you want people to do on your website? (Check all that Apply)</p>';
 				$ret .= $websitetype_checkboxes . '<div class="sf"></div></div>';
@@ -340,6 +360,10 @@ function init() {
 				die();
 			}
 		}
+
+		echo '<p>could not get the token<br>Please report the following data</p>';
+		var_dump( $response );
+		die();
 	}
 
 	// Check for authorization errors. since google uses geenric parameter name
@@ -769,32 +793,32 @@ function save() {
 	$data = array();
 
 	$fields = array(
-		'email' => 'string',
-		'website' => 'string',
-		'gtm' => 'bool',
-		'tableau' => 'bool',
-		'bigquery' => 'bool',
-		'datastudio' => 'bool',
-		'unsure' => 'bool',
-		'ecom' => 'bool',
-		'lead' => 'bool',
-		'publisher' => 'bool',
-		'test_setup' => 'bool',
-		'test_spam' => 'bool',
-		'test_raw' => 'bool',
-		'test_demographic' => 'bool',
-		'test_ecom' => 'bool',
-		'test_events' => 'bool',
-		'test_goals' => 'bool',
-		'test_goal_value' => 'bool',
-		'test_adwords' => 'bool',
-		'test_channelgroups' => 'bool',
-		'test_contentgroups' => 'bool',
-		'test_sessions' => 'int',
-		'test_bouncerate' => 'percentage',
-		'test_tophost' => 'string',
-		'test_majority_channel' => 'string',
-		'test_majority_session' => 'int',
+		'email'                    => 'string',
+		'website'                  => 'string',
+		'gtm'                      => 'bool',
+		'tableau'                  => 'bool',
+		'bigquery'                 => 'bool',
+		'datastudio'               => 'bool',
+		'unsure'                   => 'bool',
+		'ecom'                     => 'bool',
+		'lead'                     => 'bool',
+		'publisher'                => 'bool',
+		'test_setup'               => 'bool',
+		'test_spam'                => 'bool',
+		'test_raw'                 => 'bool',
+		'test_demographic'         => 'bool',
+		'test_ecom'                => 'bool',
+		'test_events'              => 'bool',
+		'test_goals'               => 'bool',
+		'test_goal_value'          => 'bool',
+		'test_adwords'             => 'bool',
+		'test_channelgroups'       => 'bool',
+		'test_contentgroups'       => 'bool',
+		'test_sessions'            => 'int',
+		'test_bouncerate'          => 'percentage',
+		'test_tophost'             => 'string',
+		'test_majority_channel'    => 'string',
+		'test_majority_session'    => 'int',
 		'test_majority_percentage' => 'percentage',
 	);
 
