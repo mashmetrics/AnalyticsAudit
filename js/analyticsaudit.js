@@ -164,10 +164,6 @@ function analyticsaudit() {
 						if ( ecom_on ) {
 							jQuery( '#analytucsaudit_test_'+ item).show();
 						}
-					} else if ( 'events' == item ) {
-						if ( event_on ) {
-							jQuery( '#analytucsaudit_test_'+ item).show();
-						}
 					} else {
 						jQuery( '#analytucsaudit_test_'+ item).show();
 					}
