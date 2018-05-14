@@ -110,7 +110,7 @@ function analyticsaudit() {
 		}
 
 		jQuery( '#analytucsaudit_message').removeClass( 'error' );
-		jQuery( '#analytucsaudit_message').text('Running the tests...');
+		//jQuery( '#analytucsaudit_message').text('Running the tests...');
 		jQuery( '#analytucsaudit_message').show();
 		jQuery( '.analytucsaudit_test' ).removeClass( 'passed' ).removeClass( 'failed' );
 

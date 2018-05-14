@@ -1,25 +1,88 @@
+.analytucsaudit_profile{
+	width: 600px;
+	margin:0 auto;
+	margin-bottom: 50px;
+}
 .analytucsaudit_profile select {
-	width:auto;
+	width: 65%;
+    background: #fff;
+    border: #cecece 1px solid;
+    color:#b3b3b3;
 }
 
 .analytucsaudit_profile label {
-	text-align:right;
+	text-align:left;
 	width:200px;
 	display:inline-block;
 	margin-right:10px;
 	line-height:50px;
 }
 
-.analytucsaudit-buttons form {display:inline;}
+.analytucsaudit-buttons form {
+	display: block;
+	margin-top: 30px;
+}
+
+.analytucsaudit-buttons form button{
+	font-size: 18px;
+	color:#31C4EA;
+}
 
 .analytucsaudit-buttons {
 	clear:both;
 	padding-top:10px;
+	text-align: center;
 }
 
+.fetch-button {
+	color:#fff;
+	font-weight:bold;
+    text-transform: uppercase;	
+	width: 245px;
+    border-radius: 4px;
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+    background: #3cc5e7;
+    padding: 18px;
+    font-size: 18px;
+    text-transform: uppercase;	
+}
+
+.fetch-button:hover{
+	background:#48acc3;	
+}
+
+.analytucsaudit_sitetype_checkboxes{
+	width: 48%;
+	padding: 25px;
+	float: left;
+	padding-left: 100px;
+}
+
+.analytucsaudit_checkboxes {
+	margin-top: 0px;
+    width: 48%;
+    display: inline-block;
+    padding: 25px;
+    padding-left: 80px;
+}
+
+.analytucsaudit_sitetype_checkboxes p,
+.analytucsaudit_checkboxes p{
+	font-weight: bold;
+}
+
+
 .analytucsaudit_checkboxes div, .analytucsaudit_sitetype_checkboxes div {
-	width:50%;
-	float:left;
+	width: 100%;
+	float: left;
+	margin-bottom: 8px;
+}
+
+.analytucsaudit_checkboxes div label, .analytucsaudit_sitetype_checkboxes div label{
+	font-size: 16px;
+	margin-left: 6px;
 }
 
 .analytucsaudit_checkboxes input, .analytucsaudit_sitetype_checkboxes input {
@@ -31,52 +94,142 @@
 	float:none !important;
 }
 
-.analytucsaudit_checkboxes {
-	margin-top:20px;
-}
 
 .analytucsaudit_test {
-	padding: 5px 0;
+	padding: 15px 15px 15px 90px;
 	margin-top:5px;
+	height: auto !important;
+	min-height: 320px;
+	border-bottom: #dde0e0 1px solid;
 }
 
-.analytucsaudit_test div {
-	padding: 0 5px;
+.analytucsaudit_test:last-child{
+	border-bottom: 0;
 }
 
 .analytucsaudit_test_type {
-	float:left;
-	width:30%;
-	margin-right:5px;
+	float: left;
+	width: 32.8%;
+	margin-right: 5px;
+	border:#F5F5F5 6px solid;
+	padding:10px;
+	border-top: 0;
+}
+
+.analytucsaudit_test_type:last-child {
+	margin-right: 0px;
+}
+
+.analytucsaudit_test_type h4{
+	font-size: 16px;
+	font-weight: bold;
+	margin-bottom: 5px;
+}
+
+.analytucsaudit_test_type p span{
+	font-size: 14px;
+	color:#8D8D8D !important;
 }
 
 .analytucsaudit_tests_header {
-	background-color:cyan;
+	background-color:transparent;
 	padding:10px;
-	border-bottom:3px solid black;
+	border:6px solid #F5F5F5;
+	float:left;
+	width: 32.8%;
+	margin-right: 5px;
+	height: auto;
+	min-height: 320px;
+	border-bottom:1px solid #efecec;
+}
+
+.analytucsaudit_tests_header h4{
+	color:#32CCF2;
+	font-size: 26px;
+}
+.analytucsaudit_tests_header p{
+	font-size: 14px;
 }
 
 .analytucsaudit_test_description {
-	float:left;
-	width:30%;
-	margin-right:5px;
+/*	float: left;
+	width: 32.5%;
+	margin-right: 5px;*/
+	padding: 15px;
+	position: relative;
+}
+
+.analytucsaudit_test_icon{
+	position: absolute;
+	top:0;
+	right:0;
 }
 
 .analytucsaudit_test.failed {
-	background-color:red;
+	/*background-color:#d9bbae;*/
+	background-image:url(/wp-content/plugins/AnalyticsAudit-master/img/failed.png);
+	background-position: left center;
+	background-repeat: no-repeat;
+	background-position: 15px 15px;
+	background-repeat: no-repeat;
+	background-size: 55px;
 }
 
 .analytucsaudit_test.passed {
-	background-color:green;
+	/*background-color:#c3dbc5;*/
+	background-image:url(/wp-content/plugins/AnalyticsAudit-master/img/passed.png);
+	background-position: 15px 15px;
+	background-repeat: no-repeat;
+	background-size: 55px;
 }
 
 #analytucsaudit_message {
 	display:none;
-	margin:10px;
-	padding:10px;
-	border:1px solid cyan;
+	margin:20px 0;
+	padding:20px;
+	border:1px solid #45c5e5;
+	text-align: center;
+	/* background-image:url(loading.gif);
+	background-repeat: no-repeat; */
 }
 
 #analytucsaudit_message.error {
 	border:1px solid red;
+}
+
+#analytucsaudit_results{
+	margin-top:40px;
+}
+
+#analytucsaudit_message .loading-icon{
+	width: 40px;
+	margin-bottom: -12px;
+	margin-right: 15px;
+}
+
+#analytucsaudit_results .text-center{
+	text-align: center;
+}
+
+
+#analytucsaudit_results #indicator-box{
+	padding: 20px;
+	border:#F5F5F5 6px solid;
+	text-align: center;
+	margin-bottom: 20px;
+}
+
+#analytucsaudit_results #indicator-box .indicator-value{
+	color:#656565;
+	font-size: 20px;
+	text-align: center;
+	display: inline-block;
+	margin-right: 50px;
+}
+#analytucsaudit_results #indicator-box .indicator-value span{
+	color:#32CCF2;
+	font-size: 28px;
+	display: block;
+	text-align: center;
+	margin-top:15px;
 }

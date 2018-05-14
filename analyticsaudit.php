@@ -62,7 +62,7 @@ function enqueue_resources() {
 function shortcode( $attr, $content ) {
 	$start_text      = esc_html__( 'Get Started', 'analyticsaudit' );
 	$fetch_text      = esc_html__( 'Check Health', 'analyticsaudit' );
-	$reset_text      = esc_html__( 'Retry', 'analyticsaudit' );
+	$reset_text      = esc_html__( 'Retry with another account', 'analyticsaudit' );
 	$action_url      = esc_url( site_url() );
 	$return_to       = esc_url( get_permalink() );
 	$return_to_field = RETURN_TO_FIELD;
@@ -238,7 +238,7 @@ EOT;
 				$ret .= '<p>Other Data Tools Used (check all that apply)</p>';
 				$ret .= $checkboxes . '</div>';
 				$ret .= '<div class="analytucsaudit-buttons"><button class="fetch-button" type="button">' . $fetch_text . '</button>' . $retry_form . '</div>';
-				$ret .= '<div id="analytucsaudit_message">Running the tests...</div>';
+				$ret .= '<div id="analytucsaudit_message"><img src="' . plugins_url( 'img/loading.gif', __FILE__ ) . '" class="loading-icon">Running the tests...</div>';
 				$ret .= '<div id="analytucsaudit_results" style="display:none">';
 
 				$options = get_option( 'analyticsauditsettings' );
@@ -249,16 +249,30 @@ EOT;
 					'accessible ' => 'accessiable_header',
 				);
 
+				// Data points HTML.
+				$ret .= '<h2 class="text-center">Audit Results</h2>';
+				$ret .= '<div id="indicator-box">';
+				$ret .= '<div class="indicator-value">Total Sessions:<span id="analytucsaudit_datapoint_total_sessions"></span></div>';
+				$ret .= '<div class="indicator-value">Bounce Rate:<span id="analytucsaudit_datapoint_bounce_rate"></span></div>';
+				$ret .= '<div class="indicator-value">Top Hostname:<span id="analytucsaudit_datapoint_top_hostname"></span></div>';
+				$ret .= '</div>';
+				//$ret .= '<div>Traffic Majority:</div>';
+				//$ret .= '<div>Channel:<span id="analytucsaudit_datapoint_channel"></span></div>';
+				//$ret .= '<div>Sessions:<span id="analytucsaudit_datapoint_sessions"></span></div>';
+				//$ret .= '<div>Percentage:<span id="analytucsaudit_datapoint_percentage"></span></div>';
+
 				// header blurb.
-				$ret .= '<div class="analytucsaudit_tests_header">';
+				
 				foreach ( $header as $id => $prefix ) {
+					$ret .= '<div class="analytucsaudit_tests_header">';
 					$ret .= '<div class="analytucsaudit_test_description" id="analytucsaudit_test_description_' . esc_attr( $id ) . '">';
 					$ret .= '<h4>' . esc_html( $options[ $prefix . '_title' ] ) . '</h4>';
 					$ret .= '<div>' . wpautop( wptexturize( $options[ $prefix . '_text' ] ) ) . '</div>';
 					$ret .= '</div>';
+					$ret .= '</div>';
 				}
 				$ret .= '<div style="clear:both"></div>';
-				$ret .= '</div>';
+				
 
 				// Tests status.
 				$tests = array(
@@ -293,15 +307,6 @@ EOT;
 					$ret .= '</div>';
 				}
 				$ret .= '<div style="clear:both"></div>';
-
-				// Data points HTML.
-				$ret .= '<div>Total Sessions:<span id="analytucsaudit_datapoint_total_sessions"></span></div>';
-				$ret .= '<div>Bounce Rate:<span id="analytucsaudit_datapoint_bounce_rate"></span></div>';
-				$ret .= '<div>Top Hostname:<span id="analytucsaudit_datapoint_top_hostname"></span></div>';
-				$ret .= '<div>Traffic Majority:</div>';
-				$ret .= '<div>Channel:<span id="analytucsaudit_datapoint_channel"></span></div>';
-				$ret .= '<div>Sessions:<span id="analytucsaudit_datapoint_sessions"></span></div>';
-				$ret .= '<div>Percentage:<span id="analytucsaudit_datapoint_percentage"></span></div>';
 
 				$ret .= '</div>';
 			}
