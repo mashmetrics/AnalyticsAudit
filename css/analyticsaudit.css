@@ -26,6 +26,7 @@
 .analytucsaudit-buttons form button{
 	font-size: 18px;
 	color:#31C4EA;
+	background:transparent;
 }
 
 .analytucsaudit-buttons {
@@ -232,4 +233,87 @@
 	display: block;
 	text-align: center;
 	margin-top:15px;
+}
+
+#analytucsaudit_results .audit-bottom-buttons{
+	text-align: center;
+	margin-top: 40px;
+}
+
+#analytucsaudit_results .audit-bottom-buttons button{
+	background-color: #bfccd0;
+	padding:10px 20px;
+	font-size: 16px;
+	color:#fff;
+	border-radius: 4px;
+}
+
+#analytucsaudit_results .audit-bottom-buttons button:hover{
+	background-color: #abb7bb;
+}
+
+
+#analytucsaudit_results .audit-bottom-buttons .button{
+	background-color: #2bbde6;
+	padding:8px 30px;
+	font-size: 22px;
+	color:#fff;
+	margin-top:25px;
+}
+
+#analytucsaudit_results .audit-bottom-buttons .button:hover{
+	background-color: #2295b5;
+}
+
+@media (max-width: 1024px) {
+	.analytucsaudit_tests_header{
+		width: 100%;
+		min-height: auto;
+	}
+	.analytucsaudit_test_type{
+		width: 100%;
+		height: auto !important;
+		min-height: auto !important;
+	}
+	.analytucsaudit_test{
+		height: auto !important;
+		min-height: auto !important;
+	}
+}
+
+@media (max-width: 768px) {
+	.analytucsaudit_sitetype_checkboxes{
+		padding-left:0 !important;
+	}
+	.analytucsaudit_checkboxes{
+		padding-left:15px !important;
+	}
+	.analytucsaudit_profile label{
+		width:100%;
+	}
+	.analytucsaudit_profile select{
+		width:100%;
+	}
+	.analytucsaudit_profile{
+		width:90%;
+	}
+	#analytucsaudit_results #indicator-box .indicator-value{
+		margin-bottom: 15px;
+	}
+	#analytucsaudit_results #indicator-box .indicator-value span{
+		font-size: 20px;
+	}
+}
+
+@media (max-width: 560px) {
+	.analytucsaudit_sitetype_checkboxes{
+		padding-left:0 !important;
+		width:100%;
+		margin:0 auto;
+	}
+	.analytucsaudit_checkboxes{
+		padding-left:0px !important;
+		width:90%;
+		margin: 0 auto;
+	}
 }
