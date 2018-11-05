@@ -317,3 +317,41 @@
 		margin: 0 auto;
 	}
 }
+
+@media print {
+	.analytucsaudit_tests_header{
+		width: 32% !important;
+		min-height: 360px !important;
+	}
+	.analytucsaudit_test_type{
+		width: 32%;
+		height: auto !important;
+		min-height: auto !important;
+	}
+	.analytucsaudit_test{
+		height: auto !important;
+		min-height: auto !important;
+	}
+	.analytucsaudit_test.failed,
+	.analytucsaudit_test.passed{
+		position: relative;
+	}
+	.analytucsaudit_test.failed:before{
+		content:url('/wp-content/plugins/AnalyticsAudit-master/img/failed.png');
+		position: absolute;
+		left:0;
+		top:10px;
+		width:20px;
+		display: block;
+		zoom:45%;
+	}
+	.analytucsaudit_test.passed:before{
+		content:url('/wp-content/plugins/AnalyticsAudit-master/img/passed.png');
+		position: absolute;
+		left:0;
+		top:10px;
+		width:20px;
+		display: block;
+		zoom:45%;
+	}
+}
